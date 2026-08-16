@@ -53,20 +53,23 @@
     });
   });
 
-  /* ---------- Маска телефона ---------- */
+  /* ---------- Маска телефона с автоподстановкой +7 ---------- */
   var phoneInput = document.getElementById("f-phone");
   if (phoneInput) {
+    phoneInput.addEventListener("focus", function () {
+      if (!phoneInput.value.replace(/\D/g, "")) phoneInput.value = "+7";
+    });
     phoneInput.addEventListener("input", function () {
       var digits = phoneInput.value.replace(/\D/g, "");
       if (digits.length > 11) digits = digits.slice(0, 11);
-      if (!digits) { phoneInput.value = ""; return; }
-      var d = digits.replace(/^7/, "8");
-      var parts = [];
-      if (d.length > 0) parts.push(d[0]);
-      if (d.length > 1) parts.push(" (" + d.slice(1, 4));
-      if (d.length > 4) parts.push(") " + d.slice(4, 7));
-      if (d.length > 7) parts.push("-" + d.slice(7, 9));
-      if (d.length > 9) parts.push("-" + d.slice(9, 11));
+      if (digits.charAt(0) === "8") digits = "7" + digits.slice(1);
+      if (digits.charAt(0) === "9") digits = "7" + digits;
+      if (digits.charAt(0) !== "7") digits = "7" + digits;
+      var parts = ["+7"];
+      if (digits.length > 1) parts.push(" (" + digits.slice(1, 4));
+      if (digits.length > 4) parts.push(") " + digits.slice(4, 7));
+      if (digits.length > 7) parts.push("-" + digits.slice(7, 9));
+      if (digits.length > 9) parts.push("-" + digits.slice(9, 11));
       phoneInput.value = parts.join("");
     });
   }
@@ -80,9 +83,11 @@
 
       var valid = true;
       var nameInput = document.getElementById("f-name");
+      var emailInput = document.getElementById("f-email");
       var phoneInput2 = document.getElementById("f-phone");
 
-      [nameInput, phoneInput2].forEach(function (input) {
+      [nameInput, emailInput].forEach(function (input) {
+        if (!input) return;
         input.classList.remove("error");
         if (!input.value.trim()) {
           input.classList.add("error");
@@ -93,9 +98,16 @@
         nameInput.classList.add("error");
         valid = false;
       }
-      if (phoneInput2 && phoneInput2.value.replace(/\D/g, "").length < 10) {
-        phoneInput2.classList.add("error");
+      if (emailInput && !/^[^\s@]+@[^\s@]+\.[^\s@]+$/.test(emailInput.value.trim())) {
+        emailInput.classList.add("error");
         valid = false;
+      }
+      if (phoneInput2) {
+        var phoneDigits = phoneInput2.value.replace(/\D/g, "");
+        if (phoneDigits.length > 1 && phoneDigits.length < 11) {
+          phoneInput2.classList.add("error");
+          valid = false;
+        }
       }
 
       if (!valid) {
