@@ -42,29 +42,11 @@
     revealEls.forEach(function (el) { el.classList.add("in"); });
   }
 
-  /* ---------- Кнопки «Запросить стоимость» -> подставляют товар в форму ---------- */
+  /* ---------- Кнопки «Запросить стоимость» -> скроллят к форме ---------- */
   var requestBtns = document.querySelectorAll(".js-request");
-  var productSelect = document.getElementById("f-product");
   var requestSection = document.getElementById("request");
   requestBtns.forEach(function (btn) {
     btn.addEventListener("click", function () {
-      var product = btn.getAttribute("data-product");
-      if (product && productSelect) {
-        var found = false;
-        for (var i = 0; i < productSelect.options.length; i++) {
-          if (productSelect.options[i].text === product) {
-            productSelect.selectedIndex = i;
-            found = true;
-            break;
-          }
-        }
-        if (!found) {
-          var opt = document.createElement("option");
-          opt.text = product;
-          productSelect.appendChild(opt);
-          productSelect.selectedIndex = productSelect.options.length - 1;
-        }
-      }
       if (requestSection) {
         requestSection.scrollIntoView({ behavior: "smooth", block: "start" });
       }
@@ -127,8 +109,7 @@
         var el = document.getElementById(id);
         return el ? el.value.trim() : "";
       };
-      var product = productSelect ? productSelect.value : "";
-      var subject = encodeURIComponent("Заявка с сайта: " + (product || "расходники для лабораторий"));
+      var subject = encodeURIComponent("Заявка с сайта ozonsnab");
       var body = [
         "Новая заявка с сайта ozonsnab",
         "",
@@ -136,7 +117,6 @@
         "Телефон: " + g("f-phone"),
         "E-mail: " + (g("f-email") || "—"),
         "Город: " + (g("f-city") || "—"),
-        "Позиция: " + (product || "—"),
         "Детали: " + (g("f-details") || "—")
       ].join("\n");
       var bodyEnc = encodeURIComponent(body);
