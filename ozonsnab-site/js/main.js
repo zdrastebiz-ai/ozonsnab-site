@@ -116,52 +116,49 @@
         return;
       }
 
-      /* Собираем текст заявки */
+      /* Собираем данные */
       var g = function (id) {
         var el = document.getElementById(id);
         return el ? el.value.trim() : "";
       };
-      var subject = encodeURIComponent("Заявка с сайта ozonsnab");
-      var body = [
-        "Новая заявка с сайта ozonsnab",
-        "",
-        "Имя: " + g("f-name"),
-        "Телефон: " + g("f-phone"),
-        "E-mail: " + (g("f-email") || "—"),
-        "Город: " + (g("f-city") || "—"),
-        "Детали: " + (g("f-details") || "—")
-      ].join("\n");
-      var bodyEnc = encodeURIComponent(body);
+      var payload = {
+        name: g("f-name"),
+        phone: g("f-phone"),
+        email: g("f-email"),
+        city: g("f-city"),
+        details: g("f-details")
+      };
 
-      /*
-        Отправка заявки. По умолчанию форма открывает письмо в почтовом клиенте
-        на ozonsnab@bk.ru. Чтобы заявки уходили в Telegram / CRM / на email-сервис,
-        замените обработчик ниже (см. закомментированные примеры).
-      */
-      try {
-        window.location.href = "mailto:ozonsnab@bk.ru?subject=" + subject + "&body=" + bodyEnc;
-      } catch (err) {}
-
-      /* Альтернатива — уведомление в Telegram через бота:
-         fetch("https://api.telegram.org/bot<TOKEN>/sendMessage", {
-           method: "POST",
-           headers: { "Content-Type": "application/json" },
-           body: JSON.stringify({ chat_id: "<CHAT_ID>", text: body })
-         }).catch(function () {});
-      */
-      /* Альтернатива — отправка на CRM-вебхук:
-         fetch("https://your-crm.example.com/webhook", {
-           method: "POST",
-           headers: { "Content-Type": "application/json" },
-           body: JSON.stringify({ name: g("f-name"), phone: g("f-phone"), product: product })
-         }).catch(function () {});
-      */
-
-      form.style.display = "none";
-      successBox.classList.add("show");
-
-      /* Цель в Яндекс.Метрике (доступна после инициализации счётчика) */
-      if (window.ym) { try { ym(67534612, "reachGoal", "form_send"); } catch (e) {} }
+      /* Отправка на сервер (send.php) — дублируется в Telegram и на почту */
+      var submitBtn = form.querySelector('button[type="submit"]');
+      if (submitBtn) {
+        submitBtn.disabled = true;
+        submitBtn.textContent = "Отправляем…";
+      }
+      fetch("send.php", {
+        method: "POST",
+        headers: { "Content-Type": "application/x-www-form-urlencoded" },
+        body: new URLSearchParams(payload).toString()
+      })
+        .then(function (res) { return res.json().catch(function () { return {}; }); })
+        .then(function (data) {
+          if (data.ok) {
+            form.style.display = "none";
+            successBox.classList.add("show");
+            if (window.ym) { try { ym(67534612, "reachGoal", "form_send"); } catch (e) {} }
+          } else {
+            alert(data.error || "Ошибка отправки, попробуйте ещё раз");
+          }
+        })
+        .catch(function () {
+          alert("Ошибка сети. Попробуйте ещё раз или напишите нам на почту ozonsnab@bk.ru");
+        })
+        .finally(function () {
+          if (submitBtn) {
+            submitBtn.disabled = false;
+            submitBtn.textContent = "Отправить заявку";
+          }
+        });
     });
   }
 
